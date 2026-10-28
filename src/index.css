@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { scroll-behavior: smooth; }
+body { @apply bg-mist text-ink font-sans antialiased; }
+.dark body { background: #0F1017; color: #F3F4F8; }
+section[id] { scroll-margin-top: 5rem; }
+
+@layer components {
+  .card { @apply rounded-2xl border border-line bg-white shadow-sm dark:border-white/10 dark:bg-[#181A24]; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn bg-brand text-white hover:bg-[#5849d6]; }
+  .btn-ghost { @apply btn border border-line bg-white text-ink hover:bg-mist dark:border-white/10 dark:bg-transparent dark:text-white dark:hover:bg-white/5; }
+  .muted { @apply text-gray-500 dark:text-gray-400; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }

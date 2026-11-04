@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:pages-assets": "vite build --config vite.pages.config.js",
+    "test": "node --test",
     "preview": "vite preview"
   },
   "dependencies": {

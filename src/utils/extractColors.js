@@ -1,10 +1,9 @@
-// Real extraction: reads the pixels of the uploaded image on a canvas, quantizes them
-// (adaptive median cut, or randomized k-means for "new palette" variations), merges near-duplicates
-// and sorts by how many pixels each color represents. Everything runs in the browser.
+// Reads image pixels in the browser and returns exact colors when possible, otherwise
+// representative image colors sorted by how many sampled pixels each color represents.
 const MAX_SIDE = 200
 const MAX_COLORS = 24
-const MIN_SPLIT_SHARE = 0.01
-const MIN_SPLIT_SPREAD = 32
+const MIN_SPLIT_SHARE = 0.005
+const MIN_SPLIT_SPREAD = 8
 
 export function loadImage(url) {
   return new Promise((resolve, reject) => {
@@ -22,6 +21,7 @@ export function readPixels(img) {
   const canvas = document.createElement('canvas')
   canvas.width = w; canvas.height = h
   const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  ctx.imageSmoothingEnabled = false
   ctx.drawImage(img, 0, 0, w, h)
   const { data } = ctx.getImageData(0, 0, w, h)
   const px = []
@@ -65,7 +65,16 @@ function medianCut(pixels) {
     const mid = box.length >> 1
     list.splice(idx, 1, box.slice(0, mid), box.slice(mid))
   }
-  return list.filter((b) => b.length).map((b) => ({ rgb: avg(b), count: b.length }))
+  return list.filter((b) => b.length).map((box) => {
+    const center = avg(box)
+    let representative = box[0], bestDistance = dist(box[0], center)
+    for (let i = 1; i < box.length; i++) {
+      const pixel = box[i]
+      const distance = dist(pixel, center)
+      if (distance < bestDistance) { representative = pixel; bestDistance = distance }
+    }
+    return { rgb: representative, count: box.length }
+  })
 }
 
 function kmeans(pixels, k) {
@@ -89,19 +98,26 @@ function kmeans(pixels, k) {
   return groups.map((g, i) => ({ rgb: centers[i], count: g.length })).filter((c) => c.count)
 }
 
-function mergeNearby(cands) {
-  const merged = []
-  for (const candidate of [...cands].sort((a, b) => b.count - a.count)) {
-    const match = merged.find((color) => dist(color.rgb, candidate.rgb) < 20)
-    if (!match) {
-      merged.push({ rgb: candidate.rgb, count: candidate.count })
-      continue
-    }
-    const total = match.count + candidate.count
-    match.rgb = match.rgb.map((channel, i) => Math.round((channel * match.count + candidate.rgb[i] * candidate.count) / total))
-    match.count = total
+function exactPalette(pixels) {
+  const counts = new Map()
+  for (const [r, g, b] of pixels) {
+    const key = (r << 16) | (g << 8) | b
+    counts.set(key, (counts.get(key) || 0) + 1)
+    if (counts.size > MAX_COLORS) return null
   }
-  return merged.sort((a, b) => b.count - a.count)
+  return [...counts].map(([key, count]) => ({
+    rgb: [(key >> 16) & 255, (key >> 8) & 255, key & 255],
+    count,
+  })).sort((a, b) => b.count - a.count)
+}
+
+export function paletteFromPixels(pixels, variant = 0, targetCount) {
+  if (!pixels.length) throw new Error('No visible pixels to extract colors from.')
+  const exact = variant === 0 ? exactPalette(pixels) : null
+  const palette = variant === 0
+    ? exact || medianCut(pixels).sort((a, b) => b.count - a.count)
+    : kmeans(pixels, Math.min(targetCount || MAX_COLORS, pixels.length)).sort((a, b) => b.count - a.count)
+  return palette.map((color) => ({ rgb: color.rgb, share: color.count / pixels.length }))
 }
 
 /** Finds a variable-size palette; a target count is only used for randomized variations. */
@@ -110,7 +126,5 @@ export async function extractColors(url, variant = 0, targetCount) {
   await new Promise((r) => setTimeout(r, 30)) // let the loading state paint
   let pixels = readPixels(img)
   if (pixels.length > 30000) { const step = Math.ceil(pixels.length / 30000); pixels = pixels.filter((_, i) => i % step === 0) }
-  const palette = variant === 0 ? medianCut(pixels) : kmeans(pixels, Math.min(targetCount || MAX_COLORS, pixels.length))
-  const colors = variant === 0 ? mergeNearby(palette) : palette.sort((a, b) => b.count - a.count)
-  return colors.map((color) => ({ rgb: color.rgb, share: color.count / pixels.length }))
+  return paletteFromPixels(pixels, variant, targetCount)
 }

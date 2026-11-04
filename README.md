@@ -14,6 +14,8 @@ npm run build    # production build in dist/
 npm run preview
 ```
 
+Run these commands from the project folder containing `package.json`. Do not open `index.html` with a static server such as VS Code Live Server; React JSX must be compiled by Vite.
+
 The app has separate Home (`/`), Extractor (`/extractor`), and About (`/about`) pages. In VS Code, use **Run and Debug → Run PaletteLab** to start the dev server and open the app in Chrome. The first run requires `npm install`.
 
 ## How extraction works

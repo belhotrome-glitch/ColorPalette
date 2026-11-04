@@ -13,7 +13,7 @@ import { rgbToHex } from './utils/colorUtils'
 
 const OK_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } }
-const page = window.location.pathname.replace(/\/+$/, '') || '/'
+const page = `/${window.location.pathname.slice(import.meta.env.BASE_URL.length)}`.replace(/\/+$/, '') || '/'
 const pageTitles = {
   '/': 'Home',
   '/extractor': 'Color Palette Extractor',
@@ -108,7 +108,7 @@ export default function App() {
           <section className="mx-auto max-w-3xl px-4 pt-16 text-center">
             <h1 className="text-3xl font-extrabold">Page not found</h1>
             <p className="mt-3 muted">The page you’re looking for doesn’t exist.</p>
-            <a className="btn-primary mt-6" href="/">Go to Home</a>
+            <a className="btn-primary mt-6" href={import.meta.env.BASE_URL}>Go to Home</a>
           </section>
         )}
       </main>

@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react'
 import { UploadCloud, Replace, Trash2, Pipette, Loader2 } from 'lucide-react'
 
-export default function ImageUploader({ image, onFile, onRemove, onExtract, loading, error }) {
+export default function ImageUploader({ image, onFile, onRemove, onExtract, onManualPick, loading, error }) {
   const input = useRef(null)
   const [over, setOver] = useState(false)
   const pick = (files) => files && files[0] && onFile(files[0])
+  const supportsManualPick = typeof window !== 'undefined' && 'EyeDropper' in window
 
   return (
     <div className="card p-5 sm:p-7">
@@ -36,6 +37,11 @@ export default function ImageUploader({ image, onFile, onRemove, onExtract, load
             <button className="btn-primary !py-3.5 text-base" onClick={onExtract} disabled={loading}>
               {loading ? <><Loader2 className="animate-spin" size={18} aria-hidden /> Extracting…</> : <><Pipette size={18} aria-hidden /> Extract Palette</>}
             </button>
+            {supportsManualPick && (
+              <button className="btn-ghost !py-3.5 text-base" onClick={onManualPick}>
+                <Pipette size={18} aria-hidden /> Pick Color (Chrome)
+              </button>
+            )}
             <div className="flex gap-2">
               <button className="btn-ghost flex-1" onClick={() => input.current.click()}><Replace size={16} aria-hidden /> Replace Image</button>
               <button className="btn-ghost flex-1" onClick={onRemove}><Trash2 size={16} aria-hidden /> Remove Image</button>

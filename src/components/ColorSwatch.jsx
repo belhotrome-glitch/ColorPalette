@@ -1,5 +1,5 @@
 import { Copy } from 'lucide-react'
-import { rgbToHex, rgbString, colorName, readableText } from '../utils/colorUtils'
+import { rgbToHex, rgbString, readableText } from '../utils/colorUtils'
 
 export default function ColorSwatch({ color, onCopy, big, generated }) {
   const hex = rgbToHex(color.rgb)
@@ -18,7 +18,6 @@ export default function ColorSwatch({ color, onCopy, big, generated }) {
         <div className="min-w-0">
           <p className="font-bold">{hex}</p>
           <p className="truncate text-xs muted">{rgbString(color.rgb)}</p>
-          <p className="truncate text-xs muted">{colorName(color.rgb)}</p>
         </div>
         <button className="btn-ghost !p-2" onClick={() => onCopy(hex)} aria-label={`Copy ${hex} to clipboard`}><Copy size={16} /></button>
       </div>

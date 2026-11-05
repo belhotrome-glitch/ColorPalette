@@ -9,7 +9,7 @@ import ColorHarmony from './components/ColorHarmony'
 import Footer from './components/Footer'
 import { extractColors, loadImage } from './utils/extractColors'
 import { toText, toJson, toCss, download, copyText } from './utils/exportPalette'
-import { rgbToHex } from './utils/colorUtils'
+import { rgbToHex, hexToRgb } from './utils/colorUtils'
 
 const OK_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } }
@@ -57,6 +57,26 @@ export default function App() {
     } catch (e) { URL.revokeObjectURL(url); setError(e.message) }
   }
   const onRemove = () => { if (image) URL.revokeObjectURL(image.url); setImage(null); setColors([]); setError('') }
+  const onManualPick = async () => {
+    if (!image) { setError('Choose an image before picking a color.'); return }
+    if (!('EyeDropper' in window)) {
+      setError('Manual color picking is available in supported Chrome browsers only.')
+      return
+    }
+    try {
+      const eyeDropper = new window.EyeDropper()
+      const result = await eyeDropper.open()
+      const rgb = hexToRgb(result.sRGBHex)
+      setColors((prev) => {
+        const hex = rgbToHex(rgb)
+        if (prev.some((c) => rgbToHex(c.rgb) === hex)) return prev
+        return [...prev, { rgb, share: null, manual: true }]
+      })
+      notify(`Picked ${result.sRGBHex}`)
+    } catch (e) {
+      if (e?.name !== 'AbortError') setError('Manual color picking was cancelled or failed.')
+    }
+  }
 
   const run = async (v) => {
     if (!image) { setError('Choose an image before extracting colors.'); return }
@@ -81,7 +101,7 @@ export default function App() {
               <h1 className="text-3xl font-extrabold">Color Palette Extractor</h1>
               <p className="mt-2 muted">Upload an image to automatically discover its meaningful colors.</p>
             </div>
-            <ImageUploader image={image} onFile={onFile} onRemove={onRemove} onExtract={extract} loading={loading} error={error} />
+            <ImageUploader image={image} onFile={onFile} onRemove={onRemove} onExtract={extract} onManualPick={onManualPick} loading={loading} error={error} />
             <PaletteResults
               colors={colors} onCopy={(h) => copy(h)} loading={loading}
               onCopyAll={() => copy(hexes.join(', '), 'All HEX codes copied')}

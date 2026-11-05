@@ -1,9 +1,9 @@
-import { rgbToHex, rgbString, colorName } from './colorUtils'
+import { rgbToHex, rgbString } from './colorUtils'
 
 export const toText = (colors) =>
-  colors.map((c, i) => `${i + 1}. ${rgbToHex(c.rgb)}  ${rgbString(c.rgb)}  ${colorName(c.rgb)}`).join('\n')
+  colors.map((c, i) => `${i + 1}. ${rgbToHex(c.rgb)}  ${rgbString(c.rgb)}`).join('\n')
 export const toJson = (colors, name = 'PaletteLab palette') =>
-  JSON.stringify({ name, colors: colors.map((c) => ({ hex: rgbToHex(c.rgb), rgb: c.rgb, name: colorName(c.rgb), share: +(c.share ?? 0).toFixed(4) })) }, null, 2)
+  JSON.stringify({ name, colors: colors.map((c) => ({ hex: rgbToHex(c.rgb), rgb: c.rgb, share: +(c.share ?? 0).toFixed(4) })) }, null, 2)
 export const toCss = (colors) =>
   ':root {\n' + colors.map((c, i) => `  --color-${i + 1}: ${rgbToHex(c.rgb)};`).join('\n') + '\n}\n'
 
